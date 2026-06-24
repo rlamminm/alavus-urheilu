@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Alavus Urheilu</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:       #0d1117;
+    --surface:  #161c26;
+    --border:   #1f2937;
+    --accent:   #22c55e;
+    --accent2:  #facc15;
+    --text:     #f0f4f8;
+    --muted:    #6b7280;
+    --red:      #ef4444;
+    --tag-bg:   #1a2535;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 14px 16px 10px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    line-height: 1;
+  }
+  .logo span { color: var(--accent); }
+  .logo small {
+    display: block;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  #refresh-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 6px 10px;
+    font-size: 18px;
+    transition: color .2s, border-color .2s;
+    flex-shrink: 0;
+  }
+  #refresh-btn:hover { color: var(--accent); border-color: var(--accent); }
+  #refresh-btn.spinning { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── DATE NAV ── */
+  .date-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 10px 16px 0;
+    scrollbar-width: none;
+  }
+  .date-nav::-webkit-scrollbar { display: none; }
+  .date-pill {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 14px;
+    white-space: nowrap;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .date-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+  .date-pill:hover:not(.active) { border-color: var(--accent); color: var(--text); }
+
+  /* ── TYPE FILTER ── */
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 16px 2px;
+    scrollbar-width: none;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .type-pill {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    padding: 5px 12px;
+    white-space: nowrap;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .type-pill.active-game    { background: rgba(250,204,21,.2); border-color: var(--accent2); color: var(--accent2); }
+  .type-pill.active-match   { background: rgba(239,68,68,.2);  border-color: #f87171;        color: #f87171; }
+  .type-pill.active-event   { background: rgba(139,92,246,.2); border-color: #a78bfa;        color: #a78bfa; }
+  .type-pill.active-all     { background: var(--accent); border-color: var(--accent); color: #000; }
+  .type-pill:hover:not([class*="active"]) { border-color: #4b5563; color: var(--text); }
+
+  /* ── VENUE FILTER ── */
+  .venue-filter {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 4px 16px 4px;
+    scrollbar-width: none;
+  }
+  .venue-filter::-webkit-scrollbar { display: none; }
+  .venue-pill {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    padding: 4px 10px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .venue-pill.active { background: #2563eb; border-color: #3b82f6; color: #fff; }
+  .venue-pill:hover:not(.active) { border-color: #4b5563; color: var(--text); }
+
+  /* ── MAIN ── */
+  main { padding: 12px 16px 80px; }
+
+  /* ── STATUS ── */
+  #status {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    margin: 0 auto 12px;
+  }
+  #status .error-icon { font-size: 36px; margin-bottom: 8px; }
+
+  /* ── DAY GROUP ── */
+  .day-group { margin-bottom: 20px; }
+  .day-header {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 4px 0 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .day-header .day-name { color: var(--text); font-size: 16px; }
+  .day-count {
+    margin-left: auto;
+    background: var(--tag-bg);
+    border-radius: 10px;
+    font-size: 11px;
+    padding: 1px 7px;
+    color: var(--muted);
+  }
+
+  /* ── EVENT CARD ── */
+  .event-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    position: relative;
+  }
+  .event-card.match      { border-left-color: var(--accent2); }
+  .event-card.tournament { border-left-color: #f87171; }
+  .event-card.event      { border-left-color: #a78bfa; }
+  .event-card:hover { background: #1a2030; border-color: #2a3548; }
+
+  .event-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .event-time {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .event-time .end-time {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .event-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .badge-game       { background: rgba(250,204,21,.15); color: var(--accent2); border: 1px solid rgba(250,204,21,.3); }
+  .badge-tournament { background: rgba(239,68,68,.15);  color: #f87171;         border: 1px solid rgba(239,68,68,.3); }
+  .badge-event      { background: rgba(139,92,246,.15); color: #a78bfa;         border: 1px solid rgba(139,92,246,.3); }
+  .badge-practice   { background: rgba(34,197,94,.12);  color: var(--accent);   border: 1px solid rgba(34,197,94,.25); }
+  .badge-other      { background: var(--tag-bg); color: var(--muted); border: 1px solid var(--border); }
+
+  .event-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .event-team {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .event-venue {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .event-venue::before { content: '📍'; font-size: 11px; }
+
+  /* ── DETAIL PANEL ── */
+  #detail-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+  #detail-panel {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 2px solid var(--accent);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 40px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .detail-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .detail-time {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .detail-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .detail-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+  .detail-label {
+    color: var(--muted);
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+  .detail-val { color: var(--text); }
+  #detail-link {
+    display: block;
+    margin-top: 16px;
+    background: var(--accent);
+    color: #000;
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    letter-spacing: .5px;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* ── FOOTER ── */
+  .update-info {
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    padding: 8px 0 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div class="logo">
+      ALAVUS <span>URHEILU</span>
+      <small>Tapahtumakalenteri</small>
+    </div>
+    <button id="refresh-btn" title="Päivitä">↻</button>
+  </div>
+  <div class="date-nav" id="date-nav"></div>
+  <div class="filter-row" id="type-filter"></div>
+  <div class="venue-filter" id="venue-filter"></div>
+</header>
+
+<main>
+  <div id="status">
+    <div class="spinner"></div>
+    Haetaan tapahtumia…
+  </div>
+  <div id="events-container" style="display:none"></div>
+  <div class="update-info" id="update-info"></div>
+</main>
+
+<div id="detail-overlay">
+  <div id="detail-panel">
+    <div class="detail-handle"></div>
+    <div class="detail-time" id="d-time"></div>
+    <div class="detail-title" id="d-title"></div>
+    <div class="detail-row"><span class="detail-label">Joukkue</span><span class="detail-val" id="d-team"></span></div>
+    <div class="detail-row"><span class="detail-label">Paikka</span><span class="detail-val" id="d-venue"></span></div>
+    <div class="detail-row"><span class="detail-label">Vastuuhenkilö</span><span class="detail-val" id="d-contact"></span></div>
+    <div class="detail-row"><span class="detail-label">Kategoria</span><span class="detail-val" id="d-type"></span></div>
+    <a id="detail-link" href="#" target="_blank">Avaa varauskalenterissa ↗</a>
+  </div>
+</div>
+
+<script>
+// ── VENUE DEFINITIONS ──────────────────────────────────────────────────────
+// events_feed=R + resourcing=1 + room_names=1 gives richer multi-room data
+const VENUES = [
+  { id: '77',       name: 'Monttu',       label: 'Monttu pesäpallokenttä',        key: 'cb22056026abf4bc978f260624105353eJwrtjKzUkrMSSwrLVayBgAcoAQp', feed: '1' },
+  { id: '65',       name: 'Jäähalli',     label: 'Alavus Areena',                 key: '443fc20214486e6be805260624104921eJwrtjKzUkrMSSwrLVayBgAcoAQp', feed: '1' },
+  { id: '75',       name: 'Keskuskenttä', label: 'Keskusurheilukenttä',           key: 'e3b9359b62def295fc7b260624110345eJwrtjKzUkrMSSwrLVayBgAcoAQp', feed: '1' },
+  { id: '74-92-93', name: 'Aseman kentät',label: 'Aseman kenttä 1–3',            key: 'e0db543d372c28bdbbdc260624110129eJwrtjKzUkrMSSwrLVayBgAcoAQp', feed: 'R' },
+  { id: '69-70-71', name: 'Liikuntahalli',label: 'Kunto-Lutran liikuntahalli',   key: '79044f18d6692194ceb2260624105900eJwrtjKzUkrMSSwrLVayBgAcoAQp', feed: 'R' },
+  { id: '218-88-89',name: 'Iivari',       label: 'Liikuntahalli Iivari (Töysä)', key: 'f2ffcaab65a9ae617614260624110659eJwrtjKzUkrMSSwrLVayBgAcoAQp', feed: 'R' },
+  { id: '198',      name: 'Tuurin kenttä',label: 'Tuurin pesäpallokenttä',       key: '28015ffa830fa3975ea0260624110431eJwrtjKzUkrMSSwrLVayBgAcoAQp', feed: '1' },
+  { id: '78',       name: 'Yleisurheilukenttä',label: 'Yleisurheilukenttä Töysä',key: '938691bbe8e85bc8f3d6260624110514eJwrtjKzUkrMSSwrLVayBgAcoAQp', feed: '1' },
+];
+
+const KNOWN_KEYS = {}; // all keys now hardcoded in VENUES above
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let allEvents = [];
+let selectedDate = null;
+let selectedVenue = 'all';
+let selectedType = 'competition'; // default: show only matches+tournaments+events
+
+// ── DATE HELPERS ──────────────────────────────────────────────────────────
+function today() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const days = ['Su','Ma','Ti','Ke','To','Pe','La'];
+  const months = ['tam','hel','maa','huh','tou','kes','hei','elo','syy','lok','mar','jou'];
+  return `${days[d.getDay()]} ${d.getDate()}. ${months[d.getMonth()]}`;
+}
+function fullDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const days = ['Sunnuntai','Maanantai','Tiistai','Keskiviikko','Torstai','Perjantai','Lauantai'];
+  return `${days[d.getDay()]} ${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`;
+}
+function timeStr(dtStr) {
+  return dtStr.slice(11, 16);
+}
+
+// ── PARSE TOOLTIP HTML ────────────────────────────────────────────────────
+function parseTooltip(html) {
+  if (!html) return {};
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  const get = (cls) => (tmp.querySelector('.' + cls) || {}).textContent?.trim() || '';
+  return {
+    time:    get('ttvalue-aika'),
+    venue:   get('ttvalue-lokaatio'),
+    team:    get('ttvalue-ryhma'),
+    contact: get('ttvalue-ope'),
+    type:    get('ttvalue-kt'),
+    status:  get('ttvalue-vahvistustila'),
+  };
+}
+
+// ── CLASSIFY EVENT ────────────────────────────────────────────────────────
+// Logiikka perustuu color + ttvalue-kt kenttien yhdistelmään:
+//
+// Joukkueiden kenttävuorot (jalkapallo, pesäpallo, jääkiekko):
+//   #ffe02d (keltainen) = ottelu
+//   #4b4bff (sininen)   = ottelu
+//   muut värit          = harjoitus / vakiovuoro
+//
+// Ulkoinen käyttö (yleisurheilu ym. — kaikki saman värisiä #c0d0ff):
+//   title sisältää kilpailu/kisat/ottelu → kilpailu
+//   muuten                               → harjoitus
+//
+// Turnaukset tunnistetaan title-tekstistä väristä riippumatta.
+function classify(ev) {
+  const color  = (ev.color || '').toLowerCase();
+  const kt     = (ev._parsed?.type || '').toLowerCase();
+  const titleL = (ev.title || '').toLowerCase();
+
+  // Turnaus-avainsanat otsikossa — nostetaan aina esiin
+  if (/turnaus|cup|open|festival|leiri|näytös/.test(titleL)) return 'tournament';
+
+  if (kt.includes('ulkoinen')) {
+    // Ulkoinen käyttö: yleisurheilu ym. — väri ei erota, käytetään title-tekstiä
+    if (/kilpailut|kilpailu|kisat|kisa|ottelu|mestaruus/.test(titleL)) return 'match';
+    return 'practice';
+  }
+
+  // Joukkueiden kenttävuorot: väri ratkaisee
+  if (color === '#ffe02d' || color === '#4b4bff') return 'match';
+
+  // Kaikki muut (vaaleanvihreä harjoitusvuoro jne.)
+  return 'practice';
+}
+
+// ── FETCH EVENTS FOR ONE VENUE ────────────────────────────────────────────
+async function fetchVenueEvents(venue, startDate, endDate) {
+  const extraParams = venue.feed === 'R'
+    ? '&events_feed=R&resourcing=1&room_names=1'
+    : '&events_feed=1';
+
+  const url = `https://erp.asio.fi/onlinekalenteri/js_embed.php?` +
+    `key=${venue.key}&lang=fin&op=combinedRoomCalendar&room=${venue.id}` +
+    `${extraParams}&tooltip=1&max_days=300` +
+    `&start=${startDate}&end=${endDate}&_=${Date.now()}`;
+
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return data
+      .filter(e => e.rendering !== 'background' && e.title !== undefined)
+      .map(e => {
+        const parsed = parseTooltip(e.tooltipContent);
+        const roomLabel = e.room_name ? e.room_name : venue.label;
+        const ev = {
+          id: `${venue.id}-${e.i}-${e.start}`,
+          title: e.title || parsed.team || '—',
+          start: e.start,
+          end: e.end,
+          date: e.start.slice(0, 10),
+          startTime: timeStr(e.start),
+          endTime: timeStr(e.end),
+          color: e.color,
+          url: e.url || '',
+          venueName: venue.name,
+          venueLabel: roomLabel,
+          _parsed: parsed,
+        };
+        ev.kind = classify(ev);
+        return ev;
+      });
+  } catch(e) {
+    return [];
+  }
+}
+
+// ── LOAD ALL EVENTS ───────────────────────────────────────────────────────
+async function loadEvents() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  showStatus('<div class="spinner"></div>Haetaan tapahtumia…');
+
+  const start = today();
+  const end = addDays(start, 60);
+
+  const results = await Promise.allSettled(
+    VENUES.map(v => fetchVenueEvents(v, start, end))
+  );
+
+  allEvents = results
+    .flatMap(r => r.status === 'fulfilled' ? r.value : [])
+    .filter(e => e.start >= start)
+    .sort((a, b) => a.start.localeCompare(b.start));
+
+  btn.classList.remove('spinning');
+
+  if (allEvents.length === 0) {
+    showStatus('<div class="error-icon">📭</div>Ei tapahtumia löydetty.');
+    return;
+  }
+
+  buildTypeFilter();
+  buildDateNav();
+  buildVenueFilter();
+  render();
+
+  const now = new Date().toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('update-info').textContent = `Päivitetty klo ${now} · ${allEvents.length} tapahtumaa`;
+}
+
+// ── DATE NAV ──────────────────────────────────────────────────────────────
+function buildDateNav() {
+  const dates = [...new Set(allEvents.map(e => e.date))].sort();
+  if (!selectedDate || !dates.includes(selectedDate)) selectedDate = null;
+  const nav = document.getElementById('date-nav');
+  nav.innerHTML = '';
+
+  const allPill = document.createElement('button');
+  allPill.className = 'date-pill' + (!selectedDate ? ' active' : '');
+  allPill.textContent = 'Kaikki';
+  allPill.onclick = () => { selectedDate = null; render(); buildDateNav(); };
+  nav.appendChild(allPill);
+
+  dates.slice(0, 30).forEach(d => {
+    const pill = document.createElement('button');
+    pill.className = 'date-pill' + (selectedDate === d ? ' active' : '');
+    pill.textContent = formatDate(d);
+    pill.onclick = () => { selectedDate = d; render(); buildDateNav(); };
+    nav.appendChild(pill);
+  });
+}
+
+// ── TYPE FILTER ───────────────────────────────────────────────────────────
+const TYPE_OPTIONS = [
+  { key: 'competition', label: '🏆 Kilpailu', activeClass: 'active-game',
+    desc: 'Ottelut, turnaukset ja tapahtumat' },
+  { key: 'match',       label: '⚔️ Ottelut',  activeClass: 'active-match' },
+  { key: 'tournament',  label: '🏅 Turnaukset', activeClass: 'active-event' },
+  { key: 'all',         label: 'Kaikki',       activeClass: 'active-all' },
+];
+
+function buildTypeFilter() {
+  const filt = document.getElementById('type-filter');
+  filt.innerHTML = '';
+  TYPE_OPTIONS.forEach(opt => {
+    const pill = document.createElement('button');
+    const isActive = selectedType === opt.key;
+    pill.className = 'type-pill' + (isActive ? ' ' + opt.activeClass : '');
+    pill.textContent = opt.label;
+    if (opt.desc) pill.title = opt.desc;
+    pill.onclick = () => { selectedType = opt.key; render(); buildTypeFilter(); };
+    filt.appendChild(pill);
+  });
+}
+
+// ── VENUE FILTER ──────────────────────────────────────────────────────────
+function buildVenueFilter() {
+  // Only show venues that have events matching current type filter
+  const visible = getFilteredByType(allEvents);
+  const usedVenues = [...new Set(visible.map(e => e.venueName))];
+  const filt = document.getElementById('venue-filter');
+  filt.innerHTML = '';
+
+  const allPill = document.createElement('button');
+  allPill.className = 'venue-pill' + (selectedVenue === 'all' ? ' active' : '');
+  allPill.textContent = 'Kaikki paikat';
+  allPill.onclick = () => { selectedVenue = 'all'; render(); buildVenueFilter(); };
+  filt.appendChild(allPill);
+
+  usedVenues.forEach(v => {
+    const pill = document.createElement('button');
+    pill.className = 'venue-pill' + (selectedVenue === v ? ' active' : '');
+    pill.textContent = v;
+    pill.onclick = () => { selectedVenue = v; render(); buildVenueFilter(); };
+    filt.appendChild(pill);
+  });
+}
+
+function getFilteredByType(events) {
+  if (selectedType === 'all') return events;
+  if (selectedType === 'competition')
+    return events.filter(e => e.kind === 'match' || e.kind === 'tournament' || e.kind === 'event');
+  return events.filter(e => e.kind === selectedType);
+}
+
+// ── RENDER EVENTS ─────────────────────────────────────────────────────────
+function render() {
+  let events = getFilteredByType(allEvents);
+  if (selectedDate) events = events.filter(e => e.date === selectedDate);
+  if (selectedVenue !== 'all') events = events.filter(e => e.venueName === selectedVenue);
+
+  const container = document.getElementById('events-container');
+  document.getElementById('status').style.display = 'none';
+  container.style.display = 'block';
+  container.innerHTML = '';
+
+  if (events.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">🏟️</div>Ei tapahtumia valituilla suodattimilla.</div>`;
+    return;
+  }
+
+  // Group by date
+  const byDate = {};
+  events.forEach(e => {
+    if (!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  });
+
+  Object.keys(byDate).sort().forEach(date => {
+    const group = document.createElement('div');
+    group.className = 'day-group';
+
+    const header = document.createElement('div');
+    header.className = 'day-header';
+    header.innerHTML = `<span class="day-name">${fullDate(date)}</span><span class="day-count">${byDate[date].length}</span>`;
+    group.appendChild(header);
+
+    byDate[date].forEach(ev => {
+      const card = document.createElement('div');
+      card.className = 'event-card ' + (ev.kind || 'other');
+      card.onclick = () => openDetail(ev);
+
+      const BADGES = {
+        match:      { cls: 'badge-game',     txt: '⚔️ Ottelu' },
+        tournament: { cls: 'badge-tournament',txt: '🏅 Turnaus' },
+        event:      { cls: 'badge-event',     txt: '📅 Tapahtuma' },
+        practice:   { cls: 'badge-practice',  txt: '🏃 Harjoitus' },
+        slot:       { cls: 'badge-other',     txt: '📋 Vuoro' },
+        other:      { cls: 'badge-other',     txt: '📋 Muu' },
+      };
+      const badge = BADGES[ev.kind] || BADGES.other;
+
+      // Title: for matches the event name (after colon) is the most interesting part
+      const parts = (ev.title || '').split(/:\s*/);
+      const teamPart  = parts[0] || ev._parsed?.team || '—';
+      const eventPart = parts.length > 1 ? parts.slice(1).join(': ').trim() : '';
+      const displayTitle = eventPart || teamPart;
+      const displayTeam  = eventPart ? teamPart : '';
+
+      card.innerHTML = `
+        <div class="event-top">
+          <div class="event-time">${ev.startTime}<br><span class="end-time">– ${ev.endTime}</span></div>
+          <span class="event-badge ${badge.cls}">${badge.txt}</span>
+        </div>
+        <div class="event-title">${displayTitle}</div>
+        ${displayTeam ? `<div class="event-team">${displayTeam}</div>` : ''}
+        <div class="event-venue">${ev.venueLabel}</div>
+      `;
+      group.appendChild(card);
+    });
+
+    container.appendChild(group);
+  });
+}
+
+// ── DETAIL PANEL ──────────────────────────────────────────────────────────
+function openDetail(ev) {
+  document.getElementById('d-time').textContent = `${ev.startTime} – ${ev.endTime}`;
+  document.getElementById('d-title').textContent = ev.title !== '—' ? ev.title : (ev._parsed?.team || '—');
+  document.getElementById('d-team').textContent = ev._parsed?.team || '—';
+  document.getElementById('d-venue').textContent = ev._parsed?.venue || ev.venueLabel;
+  document.getElementById('d-contact').textContent = ev._parsed?.contact || '—';
+  document.getElementById('d-type').textContent = ev._parsed?.type || '—';
+  const link = document.getElementById('detail-link');
+  if (ev.url) { link.href = ev.url; link.style.display = 'block'; }
+  else link.style.display = 'none';
+  document.getElementById('detail-overlay').style.display = 'block';
+}
+document.getElementById('detail-overlay').onclick = (e) => {
+  if (e.target === document.getElementById('detail-overlay'))
+    document.getElementById('detail-overlay').style.display = 'none';
+};
+
+// ── STATUS HELPER ─────────────────────────────────────────────────────────
+function showStatus(html) {
+  const s = document.getElementById('status');
+  s.innerHTML = html;
+  s.style.display = 'block';
+  document.getElementById('events-container').style.display = 'none';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+document.getElementById('refresh-btn').onclick = loadEvents;
+loadEvents();
+</script>
+</body>
+</html>

@@ -278,8 +278,9 @@
     margin-bottom: 5px;
   }
   .event-sport-icon {
-    font-size: 14px;
+    font-size: 22px;
     flex-shrink: 0;
+    line-height: 1;
   }
   .event-team-name {
     font-size: 14px;
@@ -380,6 +381,25 @@
   }
   .empty-icon { font-size: 32px; margin-bottom: 8px; }
 
+  /* ── AVAINVAROITUS ── */
+  #key-warning {
+    background: rgba(239,68,68,.1);
+    border: 1px solid rgba(239,68,68,.4);
+    border-radius: 10px;
+    color: #fca5a5;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+  }
+  #key-warning a { color: #f87171; }
+  #key-warning code {
+    background: rgba(255,255,255,.1);
+    border-radius: 3px;
+    font-size: 11px;
+    padding: 1px 4px;
+  }
+
   /* ── FOOTER ── */
   .update-info {
     text-align: center;
@@ -405,6 +425,7 @@
 </header>
 
 <main>
+  <div id="key-warning" style="display:none"></div>
   <div id="status">
     <div class="spinner"></div>
     Haetaan tapahtumia…
@@ -602,9 +623,9 @@ async function fetchVenueEvents(venue, startDate, endDate) {
 
   try {
     const resp = await fetch(url);
-    if (!resp.ok) return [];
+    if (!resp.ok) return { venue, error: `HTTP ${resp.status}`, events: [] };
     const data = await resp.json();
-    return data
+    const events = data
       .filter(e => e.rendering !== 'background' && e.start !== undefined)
       .map(e => {
         const parsed = parseTooltip(e.tooltipContent);
@@ -628,8 +649,9 @@ async function fetchVenueEvents(venue, startDate, endDate) {
         ev.kind = classify(ev);
         return ev;
       });
+    return { venue, error: null, events };
   } catch(e) {
-    return [];
+    return { venue, error: e.message || 'Verkkovirhe', events: [] };
   }
 }
 
@@ -681,8 +703,20 @@ async function loadEvents() {
     VENUES.map(v => fetchVenueEvents(v, start, end))
   );
 
-  const raw = results
-    .flatMap(r => r.status === 'fulfilled' ? r.value : [])
+  // Erota onnistuneet ja epäonnistuneet haut
+  const failed = [];
+  const allFetched = [];
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      if (r.value.error) failed.push(r.value.venue);
+      allFetched.push(...r.value.events);
+    } else {
+      // Promise itse heitti virheen (ei pitäisi tapahtua, mutta varmuuden vuoksi)
+      failed.push({ name: '?' });
+    }
+  }
+
+  const raw = allFetched
     .filter(e => e.start >= start)
     .sort((a, b) => a.start.localeCompare(b.start));
 
@@ -701,7 +735,14 @@ async function loadEvents() {
   render();
 
   const now = new Date().toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' });
-  document.getElementById('update-info').textContent = `Päivitetty klo ${now} · ${allEvents.length} tapahtumaa`;
+  const failNote = failed.length > 0
+    ? ` · ⚠️ ${failed.length} kenttää ei latautunut`
+    : '';
+  document.getElementById('update-info').textContent =
+    `Päivitetty klo ${now} · ${allEvents.length} tapahtumaa${failNote}`;
+
+  // Näytä varoitusbanneri jos jokin kenttä epäonnistui
+  showKeyWarning(failed);
 }
 
 // ── DATE NAV ──────────────────────────────────────────────────────────────
@@ -895,6 +936,25 @@ function showStatus(html) {
   s.innerHTML = html;
   s.style.display = 'block';
   document.getElementById('events-container').style.display = 'none';
+}
+
+// ── AVAINVIRHE-VAROITUS ────────────────────────────────────────────────────
+function showKeyWarning(failedVenues) {
+  const el = document.getElementById('key-warning');
+  if (!failedVenues || failedVenues.length === 0) {
+    el.style.display = 'none';
+    return;
+  }
+  const names = failedVenues.map(v => v.name).join(', ');
+  el.style.display = 'block';
+  el.innerHTML = `
+    <strong>⚠️ Seuraavien kenttien tiedot eivät latautuneet:</strong><br>
+    ${names}<br>
+    <small>Kalenteriavain on todennäköisesti vanhentunut. Avaa kyseisen kentän kalenteri
+    osoitteessa <a href="https://erp.asio.fi/onlinekalenteri/alavus/" target="_blank">erp.asio.fi</a>,
+    kopioi uusi <code>key=…</code>-arvo selaimen Network-välilehdeltä ja päivitä se
+    html-tiedostoon VENUES-listaan.</small>
+  `;
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────

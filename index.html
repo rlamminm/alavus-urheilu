@@ -213,76 +213,98 @@
   .event-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
+    border-radius: 12px;
+    padding: 0;
+    margin-bottom: 10px;
     cursor: pointer;
-    transition: border-color .15s, background .15s;
-    position: relative;
+    transition: background .15s;
+    overflow: hidden;
   }
-  .event-card.match      { border-left-color: var(--accent2); }
-  .event-card.tournament { border-left-color: #f87171; }
-  .event-card.event      { border-left-color: #a78bfa; }
-  .event-card:hover { background: #1a2030; border-color: #2a3548; }
+  .event-card:hover { background: #1a2232; }
 
+  /* Värillinen yläpalkki tyypin mukaan */
+  .event-card-bar {
+    height: 4px;
+    background: var(--muted);
+  }
+  .event-card.match      .event-card-bar { background: var(--accent2); }
+  .event-card.tournament .event-card-bar { background: #f87171; }
+  .event-card.practice   .event-card-bar { background: #374151; }
+
+  .event-card-body { padding: 12px 14px 13px; }
+
+  /* Yläosa: aika + badge */
   .event-top {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
   .event-time {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text);
-    line-height: 1;
-    white-space: nowrap;
-    flex-shrink: 0;
+    letter-spacing: .3px;
   }
-  .event-time .end-time {
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 400;
-  }
+  .event-time .sep { color: var(--muted); margin: 0 2px; font-weight: 400; }
+
   .event-badge {
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: .8px;
     text-transform: uppercase;
     padding: 3px 8px;
     border-radius: 4px;
     flex-shrink: 0;
-    margin-top: 2px;
   }
-  .badge-game       { background: rgba(250,204,21,.15); color: var(--accent2); border: 1px solid rgba(250,204,21,.3); }
-  .badge-tournament { background: rgba(239,68,68,.15);  color: #f87171;         border: 1px solid rgba(239,68,68,.3); }
-  .badge-event      { background: rgba(139,92,246,.15); color: #a78bfa;         border: 1px solid rgba(139,92,246,.3); }
-  .badge-practice   { background: rgba(34,197,94,.12);  color: var(--accent);   border: 1px solid rgba(34,197,94,.25); }
-  .badge-other      { background: var(--tag-bg); color: var(--muted); border: 1px solid var(--border); }
+  .badge-match      { background: rgba(250,204,21,.15); color: var(--accent2); border: 1px solid rgba(250,204,21,.35); }
+  .badge-tournament { background: rgba(239,68,68,.15);  color: #f87171;        border: 1px solid rgba(239,68,68,.35); }
+  .badge-practice   { background: var(--tag-bg);        color: var(--muted);   border: 1px solid var(--border); }
 
-  .event-title {
-    font-size: 15px;
-    font-weight: 600;
+  /* Vastakkainasettelu otteluille */
+  .event-matchup {
+    font-size: 16px;
+    font-weight: 700;
     color: var(--text);
     line-height: 1.3;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
   }
-  .event-team {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 4px;
-  }
-  .event-venue {
-    font-size: 12px;
-    color: var(--muted);
+  /* Joukkue */
+  .event-team-row {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    margin-bottom: 5px;
   }
-  .event-venue::before { content: '📍'; font-size: 11px; }
+  .event-sport-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .event-team-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .event-series {
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: 2px;
+  }
+
+  /* Paikka */
+  .event-venue {
+    font-size: 13px;
+    font-weight: 600;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+  .event-venue::before { content: '📍'; font-size: 12px; }
 
   /* ── DETAIL PANEL ── */
   #detail-overlay {
@@ -467,6 +489,72 @@ function parseTooltip(html) {
   };
 }
 
+// ── TUNNISTA URHEILULAJI ──────────────────────────────────────────────────
+function detectSport(ev) {
+  const t = ((ev.title || '') + ' ' + (ev._parsed?.team || '') + ' ' + (ev.venueLabel || '')).toLowerCase();
+
+  if (/pesäpallo|pesikse|pesis|pp |monttu|tuurin pesa/.test(t))         return { icon: '🥎', name: 'Pesäpallo' };
+  if (/jalkapallo|jalkkis|jp |soccer|fotball|jalkap|apv jp|fc /.test(t)) return { icon: '⚽', name: 'Jalkapallo' };
+  if (/jääkiekko|kiekko|hockey|areena|jäähalli|sm-liiga|mestis/.test(t)) return { icon: '🏒', name: 'Jääkiekko' };
+  if (/yleisurheilu|juoksu|hyppy|heitto|seiväs|kuula|keihäs|moukari|pikajuoksu|kestävyys/.test(t)) return { icon: '🏃', name: 'Yleisurheilu' };
+  if (/lentopallo|lentopalllo|volley/.test(t))                            return { icon: '🏐', name: 'Lentopallo' };
+  if (/koripallo|basket/.test(t))                                         return { icon: '🏀', name: 'Koripallo' };
+  if (/tennis|padel/.test(t))                                             return { icon: '🎾', name: 'Tennis' };
+  if (/uinti|uiminen|uimahalli/.test(t))                                  return { icon: '🏊', name: 'Uinti' };
+  if (/voimistelu|gymn/.test(t))                                          return { icon: '🤸', name: 'Voimistelu' };
+  if (/squash/.test(t))                                                   return { icon: '🎯', name: 'Squash' };
+  if (/luistelu|luistin/.test(t))                                         return { icon: '⛸️', name: 'Luistelu' };
+
+  // Tunnista kentän nimen perusteella
+  const venue = (ev.venueLabel || ev.venueName || '').toLowerCase();
+  if (/monttu|pesäpallo/.test(venue))   return { icon: '🥎', name: 'Pesäpallo' };
+  if (/areena|jäähalli/.test(venue))    return { icon: '🏒', name: 'Jääkiekko' };
+  if (/urheilukenttä|kenttä/.test(venue)) return { icon: '⚽', name: 'Jalkapallo' };
+  if (/liikuntahalli|liikuntasali/.test(venue)) return { icon: '🏃', name: 'Sisäurheilu' };
+
+  return { icon: '🏅', name: '' };
+}
+
+// ── PURA JOUKKUEEN NIMI JA SARJA ──────────────────────────────────────────
+// Asio title-muoto: "JOUKKUE SARJA: Vastustaja"
+// Esim: "APV PP NAISET MAAKUNTASARJA: APV-LaVe"
+//   → team="APV PP NAISET", series="MAAKUNTASARJA", opponent="APV-LaVe"
+function parseTitle(ev) {
+  const raw = (ev.title || '').trim();
+  const colonIdx = raw.indexOf(':');
+
+  const SERIES = ['SUOMI SARJA', 'MAAKUNTASARJA', 'YKKÖSPESIS', 'YKKÖSPESIS',
+                  'SM-SARJA', 'MESTIS', 'LIIGA', 'DIVARI', 'PIIRI', 'CUP',
+                  'P16', 'P13', 'P11', 'P09', 'P07', 'C-TYTÖT', 'D-TYTÖT',
+                  'D-POJAT', 'F-TYTÖT', 'F-POJAT', 'EDUSTUS', '4 EDUSTUS',
+                  'HARJOITUKSET', 'HARJOITUKSET KESKUSTA'];
+
+  if (colonIdx === -1) {
+    // Ei kaksoispistettä — koko otsikko on tapahtuman nimi
+    return { team: '', series: '', opponent: raw, raw };
+  }
+
+  const leftPart  = raw.slice(0, colonIdx).trim();
+  const rightPart = raw.slice(colonIdx + 1).trim();
+
+  // Etsi sarja leftPartista
+  let team = leftPart;
+  let series = '';
+  for (const s of SERIES) {
+    const idx = leftPart.toUpperCase().indexOf(s);
+    if (idx !== -1) {
+      team   = leftPart.slice(0, idx).trim();
+      series = leftPart.slice(idx).trim();
+      break;
+    }
+  }
+
+  // Siisti joukkueen nimi: poista turhat lyhenteet lopusta
+  team = team.replace(/\s+(JP|PP|JK|FC|IF|IK|SK|BK|RU|VG|HK)\s*$/i, '').trim();
+
+  return { team, series, opponent: rightPart, raw };
+}
+
 // ── CLASSIFY EVENT ────────────────────────────────────────────────────────
 // Logiikka perustuu color + ttvalue-kt kenttien yhdistelmään:
 //
@@ -517,13 +605,15 @@ async function fetchVenueEvents(venue, startDate, endDate) {
     if (!resp.ok) return [];
     const data = await resp.json();
     return data
-      .filter(e => e.rendering !== 'background' && e.title !== undefined)
+      .filter(e => e.rendering !== 'background' && e.start !== undefined)
       .map(e => {
         const parsed = parseTooltip(e.tooltipContent);
+        // events_feed=R käyttää joskus 'name'-kenttää 'title'-kentän sijaan
+        const title = e.title || e.name || parsed.team || '—';
         const roomLabel = e.room_name ? e.room_name : venue.label;
         const ev = {
-          id: `${venue.id}-${e.i}-${e.start}`,
-          title: e.title || parsed.team || '—',
+          id: `${venue.id}-${e.i || e.start}-${e.start}`,
+          title: title,
           start: e.start,
           end: e.end,
           date: e.start.slice(0, 10),
@@ -543,6 +633,41 @@ async function fetchVenueEvents(venue, startDate, endDate) {
   }
 }
 
+// ── DEDUPLIKOI TAPAHTUMAT ─────────────────────────────────────────────────
+// events_feed=R palauttaa saman tapahtuman erikseen jokaiselle osasalille,
+// ja lisäksi koko salin varaus voi tulla erikseen osasalivarausten päälle.
+// Avain: venueName + start + end + title — venueLabel jätetään pois koska
+// se vaihtelee osasalin mukaan (Isosali 1/2 vs Liikuntahalli Iivari jne.)
+// Säilytetään se venueLabel joka on lyhin (= koko hallin nimi, ei osasali).
+function deduplicateEvents(events) {
+  // Normalisoi title deduplikointia varten:
+  // Poistetaan loppuliitteet kuten " Koko sali", " 1/2", " 2/2" jne.
+  // jotka Asio lisää kun sama tapahtuma kattaa useita osasaleja.
+  function normalizeTitle(t) {
+    return (t || '')
+      .replace(/\s+(koko sali|1\/2|2\/2|1\/3|2\/3|3\/3|osa \d+)\s*$/i, '')
+      .trim();
+  }
+
+  const map = new Map();
+  for (const ev of events) {
+    const key = `${ev.venueName}|${ev.start}|${ev.end}|${normalizeTitle(ev.title)}`;
+    if (map.has(key)) {
+      const existing = map.get(key);
+      // Pidä lyhyempi venueLabel ja lyhyempi title (ilman "Koko sali" -liitettä)
+      if (ev.venueLabel.length < existing.venueLabel.length) {
+        existing.venueLabel = ev.venueLabel;
+      }
+      if (ev.title.length < existing.title.length) {
+        existing.title = ev.title;
+      }
+    } else {
+      map.set(key, { ...ev });
+    }
+  }
+  return Array.from(map.values());
+}
+
 // ── LOAD ALL EVENTS ───────────────────────────────────────────────────────
 async function loadEvents() {
   const btn = document.getElementById('refresh-btn');
@@ -556,10 +681,12 @@ async function loadEvents() {
     VENUES.map(v => fetchVenueEvents(v, start, end))
   );
 
-  allEvents = results
+  const raw = results
     .flatMap(r => r.status === 'fulfilled' ? r.value : [])
     .filter(e => e.start >= start)
     .sort((a, b) => a.start.localeCompare(b.start));
+
+  allEvents = deduplicateEvents(raw);
 
   btn.classList.remove('spinning');
 
@@ -689,31 +816,53 @@ function render() {
       card.className = 'event-card ' + (ev.kind || 'other');
       card.onclick = () => openDetail(ev);
 
+      const sport   = detectSport(ev);
+      const parsed  = parseTitle(ev);
+
       const BADGES = {
-        match:      { cls: 'badge-game',     txt: '⚔️ Ottelu' },
-        tournament: { cls: 'badge-tournament',txt: '🏅 Turnaus' },
-        event:      { cls: 'badge-event',     txt: '📅 Tapahtuma' },
-        practice:   { cls: 'badge-practice',  txt: '🏃 Harjoitus' },
-        slot:       { cls: 'badge-other',     txt: '📋 Vuoro' },
-        other:      { cls: 'badge-other',     txt: '📋 Muu' },
+        match:      { cls: 'badge-match',      txt: '⚔️ Ottelu' },
+        tournament: { cls: 'badge-tournament', txt: '🏅 Turnaus' },
+        practice:   { cls: 'badge-practice',   txt: parsed.series || 'Harjoitus' },
+        event:      { cls: 'badge-match',      txt: '📅 Tapahtuma' },
+        slot:       { cls: 'badge-practice',   txt: parsed.series || 'Vuoro' },
+        other:      { cls: 'badge-practice',   txt: 'Muu' },
       };
       const badge = BADGES[ev.kind] || BADGES.other;
 
-      // Title: for matches the event name (after colon) is the most interesting part
-      const parts = (ev.title || '').split(/:\s*/);
-      const teamPart  = parts[0] || ev._parsed?.team || '—';
-      const eventPart = parts.length > 1 ? parts.slice(1).join(': ').trim() : '';
-      const displayTitle = eventPart || teamPart;
-      const displayTeam  = eventPart ? teamPart : '';
+      // Pääotsikko: otteluissa vastustajan nimi, muissa tapahtuman nimi
+      // Joukkue näkyy omalla rivillään alapuolella, joten sitä ei toisteta otsikossa
+      let matchupHtml = '';
+      if ((ev.kind === 'match' || ev.kind === 'tournament') && parsed.opponent) {
+        matchupHtml = `<div class="event-matchup">${parsed.opponent}</div>`;
+      } else {
+        const mainTitle = parsed.opponent || parsed.team || ev._parsed?.team || '—';
+        matchupHtml = `<div class="event-matchup">${mainTitle}</div>`;
+      }
+
+      // Joukkue + laji -rivi
+      const teamName = parsed.team || ev._parsed?.team || '';
+      const seriesLabel = parsed.series && ev.kind === 'match' ? `<span class="event-series">${parsed.series}</span>` : '';
+      const teamRow = teamName
+        ? `<div class="event-team-row">
+             <span class="event-sport-icon">${sport.icon}</span>
+             <span class="event-team-name">${teamName}</span>
+             ${seriesLabel}
+           </div>`
+        : sport.name
+          ? `<div class="event-team-row"><span class="event-sport-icon">${sport.icon}</span><span class="event-series">${sport.name}</span></div>`
+          : '';
 
       card.innerHTML = `
-        <div class="event-top">
-          <div class="event-time">${ev.startTime}<br><span class="end-time">– ${ev.endTime}</span></div>
-          <span class="event-badge ${badge.cls}">${badge.txt}</span>
+        <div class="event-card-bar"></div>
+        <div class="event-card-body">
+          <div class="event-top">
+            <div class="event-time">${ev.startTime}<span class="sep">–</span>${ev.endTime}</div>
+            <span class="event-badge ${badge.cls}">${badge.txt}</span>
+          </div>
+          ${matchupHtml}
+          ${teamRow}
+          <div class="event-venue">${ev.venueLabel}</div>
         </div>
-        <div class="event-title">${displayTitle}</div>
-        ${displayTeam ? `<div class="event-team">${displayTeam}</div>` : ''}
-        <div class="event-venue">${ev.venueLabel}</div>
       `;
       group.appendChild(card);
     });
